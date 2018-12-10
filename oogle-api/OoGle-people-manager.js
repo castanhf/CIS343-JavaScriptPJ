@@ -10,6 +10,20 @@ const fs = require('fs');
 // object
 const database = require('./programmers.json');
 
+// This is a template that appears on programmers.json
+const template = {
+	"firstName": "",
+	"lastName": "",
+	"homeAddress": "",
+	"SID": "",
+	"goodSlave": "",
+	"beatingsToDate": "",
+	"family": { 	"wife": {},
+		    	"husband": {},
+			"children": []
+	}
+}
+
 // Make an instance of our express application
 const app = express();
 // Specify our > 1024 port to run on
@@ -26,28 +40,53 @@ if (!fs.existsSync('./programmers.json')) {
 // Build our routes
 
 app.get('/', (req, res) => {
-  res.send('Fill me in to return ALL programmers!');
+	res.json(database);
+  //res.send('Fill me in to return ALL programmers!');
 });
 
 app.get('/:id', (req, res) => {
   const id = req.params.id;
+  
+  //res.send(`Fill me in to return values with ID: ${id}`);
+  const gotIt = database.find(record => record.SID === id);
 
-  res.send(`Fill me in to return values with ID: ${id}`);
+  if(gotIt)
+	res.json(gotIt)
+  else
+	res.send('id ${id} not found (1)'); // the '(1)' is to differentiate output. Easier to trace code
 });
 
 app.put('/:id', (req, res) => {
   const id = req.params.id;
 
-  res.send(`Fill me in to update values with ID: ${id}`);
+  //res.send(`Fill me in to update values with ID: ${id}`);
+  let i;
+  const gotIt = database.map((user, idx) => {
+	if(user.SID === id)
+		i = idx
+  });
+  
+  if(gotIt) {
+	const uptUser = {...database[i], ...req.body};
+	database[i] = uptUser;
+	res.json(uptUser);
+  }
+  else {
+	res.send('id: ${id} not found (2)'); // same logic in '(1)'. Traceback code got easier
+  }
 });
 
 app.post('/', (req, res) => {
   const body = req.body; // Hold your JSON in here!
 
-  res.send(`You sent: ${body}`);
+  database.push(body);
+  res.json(body);
+  //res.send(`You sent: ${body}`);
 });
 
 // IMPLEMENT A ROUTE TO HANDLE ALL OTHER ROUTES AND RETURN AN ERROR MESSAGE
+app.all('*', (req, res) => res.json('ERROR: hey hey hey we got a messy route'));
+
 
 app.listen(port, () => {
   console.log(`She's alive on port ${port}`);
